@@ -4,8 +4,8 @@ from twisted.internet import reactor
 from scrapy.crawler import Crawler
 from scrapy.settings import Settings
 from scrapy import log
-from cw_amazone.spiders.book_spider import BookSpider
-from cw_amazone.spiders.comment_spider import CommentSpider
+#from cw_amazone.spiders.book_spider import BookSpider
+from amazone.spiders.comment_spider import CommentSpider
 
 def setup_crawler(domain, spidername):
     spider_class = globals()[spidername]
@@ -31,14 +31,23 @@ for item in feed['items']:
 #	print ids[2];
         #亚马逊商品的唯一ID
 	
-        surl.append("http://www.amazon.cn/product-reviews/"+ids[3]+"/ref=cm_cr_pr_top_link_"++"?ie=UTF8&pageNumber="++"&showViewpoints=0&sortBy=byRankDescending");
-
-print surl;
-spider = CommentSpider(domain="amazone.com")
-spider.start_urls = surl;
-crawler = Crawler(Settings())
-crawler.configure()
-crawler.crawl(spider)
-crawler.start()
+#        surl.append("http://www.amazon.cn/product-reviews/"+ids[3]+"/ref=cm_cr_pr_top_link_1?ie=UTF8&pageNumber=1&showViewpoints=0&sortBy=byRankDescending");
+        print surl;
+        spider = CommentSpider(domain="amazone.com",itemid=ids[3])
+        #spider.start_urls = surl;
+        crawler = Crawler(Settings())
+        crawler.configure()
+        crawler.crawl(spider)
+        crawler.start()
 log.start()
 reactor.run() # the script will block here
+
+#print surl;
+#spider = CommentSpider(domain="amazone.com")
+#spider.start_urls = surl;
+#crawler = Crawler(Settings())
+#crawler.configure()
+#crawler.crawl(spider)
+#crawler.start()
+#log.start()
+#reactor.run() # the script will block here

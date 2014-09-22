@@ -22,7 +22,13 @@ class CommentSpider(scrapy.Spider):
 	def parse(self, response):
 		result = [];
 		page=response.xpath('//span[contains(@class,"paging")]/a[last()-1]/text()').extract();	
-		page=int(page[0])
+                if len(page) == 0:
+                    page = 1
+                else:
+                    page=int(page[0])
+                print 'page:'+str(page);
+                if page > 100:
+                    page=50
 		for p in range(1,page):
 			url = "http://www.amazon.cn/product-reviews/"+self.itemid+"/ref=cm_cr_pr_top_link_"+str(p)+"?ie=UTF8&pageNumber="+str(p)+"&showViewpoints=0&sortBy=byRankDescending"
 			print url;
