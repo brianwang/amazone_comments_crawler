@@ -4,44 +4,51 @@ from scrapy.contrib.loader import ItemLoader
 from scrapy.http import Request
 import json
 import codecs,sys
+import uuid
 #reload(sys)
-#sys.setdefaultencoding('utf-8')
+#sys.setdefaultencoding('utf-6')
 class CommentSpider(scrapy.Spider):
 	name = "dangdang"
 	allowed_domains = ["dangdang.com"]
-	start_urls = []
-	itemid =''
+        start_urls = ["http://category.dangdang.com/cp01.41.41.00.00.00.html"]
 	savefile=''	
 
-	def __init__(self, itemid='', domain=None):
+	def __init__(self, domain=None):
 		#super(MySpider, self).__init__(*args, **kwargs)
-		self.itemid = itemid
-		self.start_urls = [""]
-		self.savefile = codecs.open(itemid,'w','utf-8')
+                filename = str(uuid.uuid1())
+                print filename;
+		self.savefile = codecs.open(filename,'w','utf-8')
 
 	def parse(self, response):
-		result = [];
-		page=response.xpath('//li[contains(@class,"line")]/a/text()').extract();	
-                if len(page) == 0:
-                    page = 1
-                else:
-                    page=int(page[0])
-                print 'page:'+str(page);
-                if page > 100:
-                    page=50
-		for p in range(1,page):
-			url = "http://www.amazon.cn/product-reviews/"+self.itemid+"/ref=cm_cr_pr_top_link_"+str(p)+"?ie=UTF8&pageNumber="+str(p)+"&showViewpoints=0&sortBy=byRankDescending"
-			print url;
-			yield Request(url, callback=self.parseComment,dont_filter=True)
+		urls=response.xpath('//li[contains(@class,"line")]/div/a/@href').extract();	
+                #print urls;
+                #for url in urls:
+                #    print url
+		yield Request(urls[0], callback=self.parseBook,dont_filter=True)
 
-	def parseComment(self, response):
-		print 'parseComment';
-		titles =response.xpath('//span[contains(@style,"vertical-align:middle;")]/b/text()').extract()
-		times =response.xpath('//span[contains(@style,"vertical-align:middle;")]/nobr/text()').extract()
-		authors=response.xpath('//a[contains(@href,"http://profile.amazon.cn/gp/pdp/profile")]/span/text()').extract()
-		stars=response.css('span[class*=s_star_]').xpath('./@class').extract()
-		texts=response.css('.reviewText').xpath('./text()').extract()
-		for num in range(0,len(titles)): 
-			json.dump({"title": titles[num],"time": times[num],"author": authors[num],"star": stars[num][-4],"text": texts[num]}, self.savefile,ensure_ascii=False)
+	def parseBook(self, response):
+                name = response.css("div[name=Title_pub] h1::text").extract()[0]
+                print name;
+                dangdangprice = response.css('b.d_price span::text').extract()[0];
+                print dangdangprice
+                mprice = response.css('span#originalPriceTag::text').extract()[0];
+                print mprice;
+                basicinfo = response.css('div.book_messbox div.show_info_right::text').extract();
+                print basicinfo
+                for b in basicinfo:
+                    print b;
+                #pub = basicinfo[1];
+                #print 'pub'+str(pub);
+                #pubtime= basicinfo[2];
+                #print 'pubtime'+str(pubtime); 
+                #isbn= basicinfo[3];
+                #print 'isbn'+str(isbn);
+                abstract = response.css('span#abstract_all').extract()[0];
+                print abstract
+		authorintro =response.xpath('//div[contains(@id,"authorintro")]/div[contains(@class,"descrip")]').extract()
+                print authorintro
+                mediafeedback = response.css('span#mediafeedback_all').extract()[0];
+                print mediafeedback;
+		#json.dump({"title": titles[num],"time": times[num],"author": authors[num],"star": stars[num][-4],"text": texts[num]}, self.savefile,ensure_ascii=False)
 
 
