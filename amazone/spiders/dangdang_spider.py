@@ -28,27 +28,33 @@ class CommentSpider(scrapy.Spider):
 
 	def parseBook(self, response):
                 name = response.css("div[name=Title_pub] h1::text").extract()[0]
-                print name;
+                self.savefile.write(name)
+                self.savefile.write('\n');                        
                 dangdangprice = response.css('b.d_price span::text').extract()[0];
-                print dangdangprice
+                self.savefile.write(dangdangprice)
+                self.savefile.write('\n');   
                 mprice = response.css('span#originalPriceTag::text').extract()[0];
-                print mprice;
+                self.savefile.write(mprice);
+                self.savefile.write('\n');   
                 basicinfo = response.css('div.book_messbox div.show_info_right::text').extract();
-                print basicinfo
+#                self.savefile.write(basicinfo)
                 for b in basicinfo:
-                    print b;
+                   self.savefile.write(b);
+                   self.savefile.write('\n');
                 #pub = basicinfo[1];
                 #print 'pub'+str(pub);
                 #pubtime= basicinfo[2];
                 #print 'pubtime'+str(pubtime); 
                 #isbn= basicinfo[3];
                 #print 'isbn'+str(isbn);
-                abstract = response.css('span#abstract_all').extract()[0];
-                print abstract
 		authorintro =response.xpath('//div[contains(@id,"authorintro")]/div[contains(@class,"descrip")]').extract()
-                print authorintro
-                mediafeedback = response.css('span#mediafeedback_all').extract()[0];
-                print mediafeedback;
+                self.savefile.write(''.join(authorintro))
+                self.savefile.write('\n')
+                allinfo= response.css('textarea[style*="height:0px;border-width:0px"]').extract();
+                for info in allinfo:
+                    self.savefile.write(info);
+                    self.savefile.write('\n');
+                self.savefile.close()
 		#json.dump({"title": titles[num],"time": times[num],"author": authors[num],"star": stars[num][-4],"text": texts[num]}, self.savefile,ensure_ascii=False)
 
 
