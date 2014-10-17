@@ -53,46 +53,80 @@ class AmazoneSpider(scrapy.Spider):
 		print listprice
 		price= response.css('span[id=actualPriceValue] b::text').extract()[0][2:]
 		print price
-		detail = response.css('td.bucket div.content ul li::text').extract()
+		titles = response.css('td.bucket div.content ul li b::text').extract()
+		print titles
+		detail1 = response.css('td.bucket div.content ul li::text').extract()
+		print detail1
+		detail ='@@'.join(detail1).replace('\n','').replace(u"\xa0",'').replace(' ','').replace('@@@@','@@').split('@@')
 		print detail
-		#self.savefile.write(''.join(detail));
 		pub = detail[0]
 		print pub
-		pages = detail[1]
-		print pages
-		readerage =explode(detail[2][-1],'-')
-		reader_age_from = readerage[0]
-		print reader_age_from
-		reader_age_to = readerage[1]
-		print reader_age_to
-		lang = detail[3]
-		print lang
-		pagesize = detail[4]
-		isbn = detail[5]
-		size = detail[6]
-		rank = detail[11]
+		if titles[2] == u'丛书名:':
+			print '丛书名';
+			pages = detail[3]
+			readerage =detail[4][:-1].split('-')
+			print readerage
+			lang = detail[5]
+			pagesize = detail[6]
+			isbn = detail[7]
+			size = detail[9]
+			rank = detail[16]
+			reader_age_from = readerage[0]
+			reader_age_to = readerage[1]
+		#self.savefile.write(''.join(detail));
+		elif detail1[1] == u'\xa0' and detail1[2].find(u'岁') != -1:
+			pages = '0y'
+			readerage =detail[1][:-1].split('-')
+			lang = detail[2]
+			pagesize = detail[3]
+			isbn = detail[4]
+			size = detail[6]
+			rank = detail[13]
+		
+		elif titles[1] == u'丛书名:':
+			pages = detail[2]
+			readerage =detail[3][:-1].split('-')
+			print readerage
+			lang = detail[4]
+			pagesize = detail[5]
+			isbn = detail[6]
+			size = detail[8]
+			rank = detail[15]
+		else:
+			pages = detail[1]
+			#print detail[2][:-1];
+			readerage =detail[2][:-1].split('-')
+			lang = detail[3]
+			pagesize = detail[4]
+			isbn = detail[5]
+			size = detail[7]
+			rank = detail[14]
+		try:
+			reader_age_from = readerage[0]
+			reader_age_to = readerage[1]
+		except:
+			print readerage
+			reader_age_to = 0
+			reader_age_from = 0
+		rank=rank[rank.find(u'第')+1:-2]
+		print rank
 		aid = response.meta['aid']
 		url= response.meta['url']+"product-description/"+aid
 		print url
 		sql = 'insert into amazone_book(id,name,realprice,price,\
 			reader_age_from,reader_age_to,pub,\
 			page,lang,isbn,rank,size,pagesize,\
-			content,) \
+			content) \
 			values(\''+aid+'\',\''+name+'\','+listprice+','+price+','+reader_age_from+','\
-				+reader_age_to+',\''+pub+'\','+page+',\''+lang+'\',\''+isbn+'\','+rank
-		yield Request(url, callback=self.parseBookDescription,dont_filter=True,meta={"aid":aid})
+				+reader_age_to+',\''+pub+'\','+pages[:-1]+',\''+lang+'\',\''+isbn+'\','+rank\
+				+',\''+size+'\','+pagesize+',';
+		yield Request(url, callback=self.parseBookDescription,dont_filter=True,meta={"aid":aid,'sql':sql})
 
 	def parseBookDescription(self, response):
 		aid = response.meta['aid']
-		name = ''.join(response.css('span[id=btAsinTitle] span::text').extract()).strip(' \t\n\r')
-		print name
-		listprice= response.css('span[id=listPriceValue]::text').extract()[0][2:]
-		print listprice
-		price= response.css('span[id=actualPriceValue] b::text').extract()[0][2:]
-		print price
+		sql = response.meta['sql']
 		content =response.css('div[class=content]').extract()[0].replace('\'','"').strip(' \t\n\r')
-		#print content;
-		sql = 'insert into amazone_book values(\''+aid+'\',\''+name+'\','+listprice+','+price+',\''+content+'\')'
+		sql += '\''+content+'\');';
 		self.savefile.write(sql);
 		#self.cur.execute(sql)
 
