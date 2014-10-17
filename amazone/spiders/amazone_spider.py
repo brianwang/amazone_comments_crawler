@@ -82,7 +82,6 @@ class AmazoneSpider(scrapy.Spider):
 			isbn = detail[4]
 			size = detail[6]
 			rank = detail[13]
-		
 		elif titles[1] == u'丛书名:':
 			pages = detail[2]
 			readerage =detail[3][:-1].split('-')
@@ -105,6 +104,7 @@ class AmazoneSpider(scrapy.Spider):
 			reader_age_from = readerage[0]
 			reader_age_to = readerage[1]
 		except:
+			print 'readerage error:'
 			print readerage
 			reader_age_to = 0
 			reader_age_from = 0
@@ -119,7 +119,7 @@ class AmazoneSpider(scrapy.Spider):
 			content) \
 			values(\''+aid+'\',\''+name+'\','+listprice+','+price+','+reader_age_from+','\
 				+reader_age_to+',\''+pub+'\','+pages[:-1]+',\''+lang+'\',\''+isbn+'\','+rank\
-				+',\''+size+'\','+pagesize+',';
+				+',\''+size+'\','+str(pagesize)+',';
 		yield Request(url, callback=self.parseBookDescription,dont_filter=True,meta={"aid":aid,'sql':sql})
 
 	def parseBookDescription(self, response):
