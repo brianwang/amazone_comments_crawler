@@ -47,11 +47,15 @@ class AmazoneSpider(scrapy.Spider):
 			yield Request(url, callback=self.parseBook,dont_filter=True,meta={"aid":aid,'url': t[:ridx]})
 			
 	def parseBook(self,response):
-		name = ''.join(response.css('span[id=btAsinTitle] span::text').extract()).strip(' \t\n\r')
+		name = ''.join(response.css('span[id=productTitle]::text').extract()).strip(' \t\n\r')
 		print name
-		listprice= response.css('span[id=listPriceValue]::text').extract()[0][2:]
+		auth = '@@'.join(response.css('div[id=byline] a::text').extract()).strip('\t\r\n');
+		print auth
+		pubtime = response.css('h1[id=title] span:nth-child(3) ::text').extract()[0][2:]
+		print pubtime
+		listprice= response.css('div[id=soldByThirdParty] span::text').extract()[0][1:]
 		print listprice
-		price= response.css('span[id=actualPriceValue] b::text').extract()[0][2:]
+		price= response.css('span[class="a-color-secondary a-text-strike"]::text').extract()[0][1:]
 		print price
 		titles = response.css('td.bucket div.content ul li b::text').extract()
 		print titles
@@ -62,6 +66,7 @@ class AmazoneSpider(scrapy.Spider):
 		pub = detail[0]
 		print pub
 		if titles[2] == u'丛书名:':
+			print '2 is cong shu ming'
 			print '丛书名';
 			pages = detail[3]
 			readerage =detail[4][:-1].split('-')
@@ -75,6 +80,7 @@ class AmazoneSpider(scrapy.Spider):
 			reader_age_to = readerage[1]
 		#self.savefile.write(''.join(detail));
 		elif detail1[1] == u'\xa0' and detail1[2].find(u'岁') != -1:
+			print '1 is sui'
 			pages = '0y'
 			readerage =detail[1][:-1].split('-')
 			lang = detail[2]
@@ -83,14 +89,17 @@ class AmazoneSpider(scrapy.Spider):
 			size = detail[6]
 			rank = detail[13]
 		elif titles[1] == u'丛书名:':
-			pages = detail[2]
-			readerage =detail[3][:-1].split('-')
+			print '1 is cong shu ming'
+			pages = detail[1]
+			for i in range(0,len(detail)-1):
+				print detail[i]		
+			readerage =detail[2][:-1].split('-')
 			print readerage
-			lang = detail[4]
-			pagesize = detail[5]
-			isbn = detail[6]
-			size = detail[8]
-			rank = detail[15]
+			lang = detail[3]
+			pagesize = detail[4]
+			isbn = detail[5]
+			size = detail[7]
+			rank = detail[14]
 		else:
 			pages = detail[1]
 			#print detail[2][:-1];
@@ -113,13 +122,13 @@ class AmazoneSpider(scrapy.Spider):
 		aid = response.meta['aid']
 		url= response.meta['url']+"product-description/"+aid
 		print url
-		sql = 'insert into amazone_book(id,name,realprice,price,\
+		sql = 'insert into amazone_book(id,name,author,pubtime,realprice,price,\
 			reader_age_from,reader_age_to,pub,\
-			page,lang,isbn,rank,size,pagesize,\
+			pages,lang,isbn,rank,size,pagesize,\
 			content) \
-			values(\''+aid+'\',\''+name+'\','+listprice+','+price+','+reader_age_from+','\
-				+reader_age_to+',\''+pub+'\','+pages[:-1]+',\''+lang+'\',\''+isbn+'\','+rank\
-				+',\''+size+'\','+str(pagesize)+',';
+			values(\''+aid+'\',\''+name+'\',\''+auth+'\',\''+pubtime+'\','+listprice+','+price+','+reader_age_from+','\
+				+reader_age_to+',\''+pub+'\','+pages[:-1]+',\''+lang+'\',\''+isbn+'\',\''+rank\
+				+'\',\''+size+'\','+str(pagesize)+',';
 		yield Request(url, callback=self.parseBookDescription,dont_filter=True,meta={"aid":aid,'sql':sql})
 
 	def parseBookDescription(self, response):
